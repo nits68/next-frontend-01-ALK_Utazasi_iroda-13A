@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Toaster } from "react-hot-toast";
 import "./globals.css";
 
@@ -16,6 +17,15 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Toaster position="bottom-right" toastOptions={{ duration: 5000 }} />
+        <nav className="flex w-full space-x-6 bg-gray-300 p-4">
+          <h1 className="text-xl font-bold">ÁLK Utazási iroda</h1>
+          <Link className="text-xl transition-transform hover:scale-110" href="/journeys">
+            Kínálatunk
+          </Link>
+          <Link className="text-xl transition-transform hover:scale-110" href="/registration">
+            Regisztáció
+          </Link>
+        </nav>
         {children}
       </body>
     </html>
