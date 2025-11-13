@@ -1,7 +1,10 @@
 "use client";
 
-import axios from "axios";
+import axios, { isAxiosError } from "axios";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+// import { useGlobalStore } from "@/store/globalStore";
 
 export type DestinationItem = {
   id: number;
@@ -18,12 +21,19 @@ export type ReserveItem = {
 };
 
 export default function RegistrationPage() {
+  const router = useRouter();
+  // const { id, setId } = useGlobalStore();
+  const searchParams = useSearchParams();
+  const id: number | null = Number(searchParams.get("id")) || null;
+
   const [destination, setDestination] = useState<DestinationItem[]>([]);
   const [newReserve, setNewReserve] = useState<ReserveItem>({
     acceptedConditions: false,
-    journeyId: 0,
+    journeyId: id || 0,
     lastCovidVaccineDate: new Date().toISOString().split("T")[0], // Formátum az inputhoz "2025-11-13"
   } as ReserveItem);
+
+  
 
   useEffect(() => {
     async function fetchData() {
@@ -31,10 +41,28 @@ export default function RegistrationPage() {
       setDestination(res.data);
     }
     fetchData();
+    // setId(null);
   }, []);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); // Alapértelmezett viselkedés (form újratöltése) letíltása
+    try {
+      const res = await axios.post("http://localhost:3000/api/reserve", newReserve);
+      toast.success(`Regisztációját ${res.data.id}-s azonosítószámon rögzítettük.`);
+      router.push("/journeys");
+    } catch (error) {
+      if (isAxiosError(error)) {
+        toast.error(`Hiba: ${error.response?.data.message || error.message}`);
+      } else toast.error("Ismeretlen hiba!");
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-200">
-      <form className="flex w-[90%] max-w-[500px] flex-col gap-4 rounded-md bg-white p-4 shadow-xl">
+      <form
+        className="flex w-[90%] max-w-[500px] flex-col gap-4 rounded-md bg-white p-4 shadow-xl"
+        onSubmit={handleSubmit}
+      >
         <h1 className="text-center text-3xl font-bold">Regisztáció</h1>
         <div>
           <label htmlFor="dest">Utazás:</label>
@@ -94,13 +122,25 @@ export default function RegistrationPage() {
             className="input w-full input-primary"
             defaultValue={newReserve.lastCovidVaccineDate}
             type="date"
-            onChange={e => setNewReserve({...newReserve, lastCovidVaccineDate: e.target.value})}
+            onChange={(e) => setNewReserve({ ...newReserve, lastCovidVaccineDate: e.target.value })}
           />
         </div>
+        <div>
+          <input
+            checked={newReserve.acceptedConditions}
+            className="mr-2"
+            id="accept"
+            type="checkbox"
+            onChange={(e) => setNewReserve({ ...newReserve, acceptedConditions: e.target.checked })}
+          />
+          <label htmlFor="accept">Felhasználási feltételeket elfogadom</label>
+        </div>
+        <div>
+          <input className="btn mx-auto block shadow-xl btn-primary" type="submit" value="Küldés" />
+        </div>
       </form>
-      {JSON.stringify(newReserve)}
+      {/* {JSON.stringify(destination)} */}
+      {/* {JSON.stringify(newReserve)} */}
     </div>
   );
 }
-
-// {JSON.stringify(destination)}
